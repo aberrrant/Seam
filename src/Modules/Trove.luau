@@ -217,7 +217,7 @@ function Trove.Once(self: TroveInternal, signal: SignalLike | SignalLikeMetatabl
 	local conn
 	conn = confirmedSignal:Once(function(...)
 		fn(...)
-		self:Pop(conn)
+		self:Pop(conn :: any)
 	end)
 
 	return self:Add(conn)
