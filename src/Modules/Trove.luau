@@ -54,10 +54,7 @@ type ConnectionLike = {
 	Disconnect: (self: ConnectionLike) -> (),
 }
 
-type ConnectionLikeMetatable = typeof(setmetatable(
-	{},
-	{} :: { Connected: boolean, Disconnect: (self: ConnectionLikeMetatable) -> () }
-))
+type ConnectionLikeMetatable = typeof(setmetatable({}, {} :: { Connected: boolean, Disconnect: (self: ConnectionLikeMetatable) -> () }))
 
 type SignalLike = {
 	Connect: (self: SignalLike, callback: (...any) -> ...any) -> ConnectionLike | ConnectionLikeMetatable,
@@ -99,10 +96,7 @@ type DestroyableLowercase = {
 	destroy: (self: DestroyableLowercase) -> (),
 }
 
-type DestroyableLowercaseMetatable = typeof(setmetatable(
-	{},
-	{} :: { destroy: (self: DestroyableLowercaseMetatable) -> () }
-))
+type DestroyableLowercaseMetatable = typeof(setmetatable({}, {} :: { destroy: (self: DestroyableLowercaseMetatable) -> () }))
 
 type Disconnectable = {
 	Disconnect: (self: Disconnectable) -> (),
@@ -114,10 +108,7 @@ type DisconnectableLowercase = {
 	disconnect: (self: DisconnectableLowercase) -> (),
 }
 
-type DisconnectableLowercaseMetatable = typeof(setmetatable(
-	{},
-	{} :: { disconnect: (self: DisconnectableLowercaseMetatable) -> () }
-))
+type DisconnectableLowercaseMetatable = typeof(setmetatable({}, {} :: { disconnect: (self: DisconnectableLowercaseMetatable) -> () }))
 
 local FN_MARKER = newproxy()
 local THREAD_MARKER = newproxy()
@@ -132,9 +123,7 @@ local function getObjectCleanupFunction(object: any, cleanupMethod: string?)
 		return THREAD_MARKER
 	end
 
-	if cleanupMethod then
-		return cleanupMethod
-	end
+	if cleanupMethod then return cleanupMethod end
 
 	if t == "Instance" then
 		return "Destroy"
@@ -142,9 +131,7 @@ local function getObjectCleanupFunction(object: any, cleanupMethod: string?)
 		return "Disconnect"
 	elseif t == "table" then
 		for _, genericCleanupMethod in GENERIC_OBJECT_CLEANUP_METHODS do
-			if typeof(object[genericCleanupMethod]) == "function" then
-				return genericCleanupMethod
-			end
+			if typeof(object[genericCleanupMethod]) == "function" then return genericCleanupMethod end
 		end
 	end
 
@@ -184,9 +171,7 @@ function Trove.new(): Trove
 end
 
 function Trove.Add(self: TroveInternal, object: Trackable, cleanupMethod: string?): any
-	if self._cleaning then
-		error("cannot call trove:Add() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:Add() while cleaning", 2) end
 
 	local cleanup = getObjectCleanupFunction(object, cleanupMethod)
 	table.insert(self._objects, { object, cleanup })
@@ -195,17 +180,13 @@ function Trove.Add(self: TroveInternal, object: Trackable, cleanupMethod: string
 end
 
 function Trove.Clone(self: TroveInternal, instance: Instance): Instance
-	if self._cleaning then
-		error("cannot call trove:Clone() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:Clone() while cleaning", 2) end
 
 	return self:Add(instance:Clone())
 end
 
 function Trove.Construct<T, A...>(self: TroveInternal, class: Constructable<T, A...>, ...: A...)
-	if self._cleaning then
-		error("Cannot call trove:Construct() while cleaning", 2)
-	end
+	if self._cleaning then error("Cannot call trove:Construct() while cleaning", 2) end
 
 	local object = nil
 	local t = type(class)
@@ -218,14 +199,8 @@ function Trove.Construct<T, A...>(self: TroveInternal, class: Constructable<T, A
 	return self:Add(object)
 end
 
-function Trove.Connect(
-	self: TroveInternal,
-	signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
-	fn: (...any) -> ...any
-)
-	if self._cleaning then
-		error("Cannot call trove:Connect() while cleaning", 2)
-	end
+function Trove.Connect(self: TroveInternal, signal: SignalLike | SignalLikeMetatable | RBXScriptSignal, fn: (...any) -> ...any)
+	if self._cleaning then error("Cannot call trove:Connect() while cleaning", 2) end
 	assertSignalLike(signal)
 
 	local confirmedSignal = signal :: SignalLike
@@ -233,14 +208,8 @@ function Trove.Connect(
 	return self:Add(confirmedSignal:Connect(fn))
 end
 
-function Trove.Once(
-	self: TroveInternal,
-	signal: SignalLike | SignalLikeMetatable | RBXScriptSignal,
-	fn: (...any) -> ...any
-)
-	if self._cleaning then
-		error("Cannot call trove:Connect() while cleaning", 2)
-	end
+function Trove.Once(self: TroveInternal, signal: SignalLike | SignalLikeMetatable | RBXScriptSignal, fn: (...any) -> ...any)
+	if self._cleaning then error("Cannot call trove:Connect() while cleaning", 2) end
 	assertSignalLike(signal)
 
 	local confirmedSignal = signal :: SignalLike
@@ -255,9 +224,7 @@ function Trove.Once(
 end
 
 function Trove.BindToRenderStep(self: TroveInternal, name: string, priority: number, fn: (dt: number) -> ())
-	if self._cleaning then
-		error("cannot call trove:BindToRenderStep() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:BindToRenderStep() while cleaning", 2) end
 
 	RunService:BindToRenderStep(name, priority, fn)
 
@@ -267,17 +234,13 @@ function Trove.BindToRenderStep(self: TroveInternal, name: string, priority: num
 end
 
 function Trove.AddPromise(self: TroveInternal, promise: PromiseLike | PromiseLikeMetatable)
-	if self._cleaning then
-		error("cannot call trove:AddPromise() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:AddPromise() while cleaning", 2) end
 	assertPromiseLike(promise)
 	local confirmedPromise = promise :: PromiseLike
 
 	if confirmedPromise:getStatus() == "Started" then
 		confirmedPromise:finally(function()
-			if self._cleaning then
-				return
-			end
+			if self._cleaning then return end
 			self:_findAndRemoveFromObjects(confirmedPromise, false)
 		end)
 
@@ -288,33 +251,25 @@ function Trove.AddPromise(self: TroveInternal, promise: PromiseLike | PromiseLik
 end
 
 function Trove.Remove(self: TroveInternal, object: Trackable): boolean
-	if self._cleaning then
-		error("cannot call trove:Remove() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:Remove() while cleaning", 2) end
 
 	return self:_findAndRemoveFromObjects(object, true)
 end
 
 function Trove.Pop(self: TroveInternal, object: Trackable): boolean
-	if self._cleaning then
-		error("cannot call trove:Pop() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:Pop() while cleaning", 2) end
 
 	return self:_findAndRemoveFromObjects(object, false)
 end
 
 function Trove.Extend(self: TroveInternal)
-	if self._cleaning then
-		error("cannot call trove:Extend() while cleaning", 2)
-	end
+	if self._cleaning then error("cannot call trove:Extend() while cleaning", 2) end
 
 	return self:Construct(Trove)
 end
 
 function Trove.Clean(self: TroveInternal)
-	if self._cleaning then
-		return
-	end
+	if self._cleaning then return end
 
 	self._cleaning = true
 
@@ -341,9 +296,7 @@ function Trove._findAndRemoveFromObjects(self: TroveInternal, object: any, clean
 			objects[i] = objects[n]
 			objects[n] = nil
 
-			if cleanup then
-				self:_cleanupObject(obj[1], obj[2])
-			end
+			if cleanup then self:_cleanupObject(obj[1], obj[2]) end
 
 			return true
 		end
