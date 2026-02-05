@@ -169,7 +169,7 @@ function Value:__call(ThisValue: any)
 				if ValueType == "table" then
 					-- Is the value a table? If so, update each table value individually
 
-					if IsValueChanged(ThisValue, NewValue) then return end
+					if not IsValueChanged(ThisValue, NewValue) then return end
 
 					ThisValue = NewValue
 
